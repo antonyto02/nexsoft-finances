@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { HydratedDocument } from 'mongoose';
 
-export type DailySummaryDocument = DailySummary & Document;
+export type DailySummaryDocument = HydratedDocument<DailySummary>;
 
 @Schema({ collection: 'daily_summary' })
 export class DailySummary {

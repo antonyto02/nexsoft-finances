@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { HydratedDocument } from 'mongoose';
 
-export type MonthlySummaryDocument = MonthlySummary & Document;
+export type MonthlySummaryDocument = HydratedDocument<MonthlySummary>;
 
 @Schema({ collection: 'monthly_summary' })
 export class MonthlySummary {

@@ -15,10 +15,13 @@ interface UpdatePayload {
 export class MonthlySummaryService {
   constructor(
     @InjectModel(MonthlySummary.name)
-    private readonly summaryModel: Model<MonthlySummaryDocument>,
+    private readonly summaryModel: Model<MonthlySummary>,
   ) {}
 
-  private async createNewSummary(year: number, month: number): Promise<MonthlySummaryDocument> {
+  private async createNewSummary(
+    year: number,
+    month: number,
+  ): Promise<MonthlySummaryDocument> {
     const id = `${year}-${String(month).padStart(2, '0')}`;
 
     let initial_balance: Record<string, number> = {};
@@ -53,6 +56,10 @@ export class MonthlySummaryService {
     let summary = await this.summaryModel.findById(id);
     if (!summary) {
       summary = await this.createNewSummary(year, month);
+    }
+
+    if (!summary) {
+      throw new Error('Failed to load or create monthly summary');
     }
 
     if (payload.type === 'income') {
