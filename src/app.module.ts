@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CategoriesModule } from './monitoring/categories/categories.module';
 import { PaymentMethodsModule } from './monitoring/payment-methods/payment-methods.module';
 import { TransactionsModule } from './transactions/transactions.module';
+import { SummaryTransactionsModule } from './monitoring/summary-transactions/summary-transactions.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { TransactionsModule } from './transactions/transactions.module';
     CategoriesModule,
     PaymentMethodsModule,
     TransactionsModule,
+    SummaryTransactionsModule,
   ],
 })
 export class AppModule {}
