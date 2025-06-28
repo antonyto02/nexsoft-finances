@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { Transaction, TransactionDocument } from './transaction.schema';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { DailySummaryService } from '../monitoring/daily-summary/daily-summary.service';
+import { MonthlySummaryService } from '../monitoring/monthly-summary/monthly-summary.service';
 
 @Injectable()
 export class TransactionsService {
@@ -11,6 +12,7 @@ export class TransactionsService {
     @InjectModel(Transaction.name)
     private readonly transactionModel: Model<TransactionDocument>,
     private readonly dailySummaryService: DailySummaryService,
+    private readonly monthlySummaryService: MonthlySummaryService,
   ) {}
 
   async create(createTransactionDto: CreateTransactionDto): Promise<Transaction> {
@@ -25,6 +27,14 @@ export class TransactionsService {
       type: transaction.type as 'income' | 'expense',
       category: transaction.category,
       amount: transaction.amount,
+    });
+
+    await this.monthlySummaryService.updateSummary({
+      date: transaction.date,
+      type: transaction.type as 'income' | 'expense',
+      category: transaction.category,
+      amount: transaction.amount,
+      payment_method: transaction.method,
     });
 
     return transaction;
