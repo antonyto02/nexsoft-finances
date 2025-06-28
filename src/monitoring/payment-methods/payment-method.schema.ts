@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { HydratedDocument } from 'mongoose';
 
-export type PaymentMethodDocument = PaymentMethod & Document;
+export type PaymentMethodDocument = HydratedDocument<PaymentMethod>;
 
 @Schema({ collection: 'payment_methods' })
 export class PaymentMethod {
