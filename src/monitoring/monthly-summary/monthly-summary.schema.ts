@@ -49,7 +49,9 @@ MonthlySummarySchema.pre<MonthlySummaryDocument>('save', async function (next) {
   const prevMonth = this.month === 1 ? 12 : this.month - 1;
   const prevYear = this.month === 1 ? this.year - 1 : this.year;
   const prevId = `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
-  const prevSummary = await this.model('MonthlySummary').findById(prevId);
+  const prevSummary = (await this.model<MonthlySummary>(
+    'MonthlySummary',
+  ).findById(prevId)) as MonthlySummaryDocument | null;
 
   if (prevSummary) {
     this.initial_balance = { ...prevSummary.final_balance };
