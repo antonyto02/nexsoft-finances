@@ -15,7 +15,7 @@ interface UpdatePayload {
 export class MonthlySummaryService {
   constructor(
     @InjectModel(MonthlySummary.name)
-    private readonly summaryModel: Model<MonthlySummaryDocument>,
+    private readonly summaryModel: Model<MonthlySummary>,
   ) {}
 
   private async createNewSummary(
