@@ -40,3 +40,28 @@ export class MonthlySummary {
 }
 
 export const MonthlySummarySchema = SchemaFactory.createForClass(MonthlySummary);
+
+MonthlySummarySchema.pre<MonthlySummaryDocument>('save', async function (next) {
+  if (!this.isNew) {
+    return next();
+  }
+
+  const prevMonth = this.month === 1 ? 12 : this.month - 1;
+  const prevYear = this.month === 1 ? this.year - 1 : this.year;
+  const prevId = `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
+  const prevSummary = (await (this.model(
+    'MonthlySummary',
+  ) as any).findById(prevId)) as MonthlySummaryDocument | null;
+
+  if (prevSummary) {
+    this.initial_balance = { ...prevSummary.final_balance };
+  } else {
+    this.initial_balance = {};
+  }
+
+  if (!this.final_balance || Object.keys(this.final_balance).length === 0) {
+    this.final_balance = { ...this.initial_balance };
+  }
+
+  next();
+});
