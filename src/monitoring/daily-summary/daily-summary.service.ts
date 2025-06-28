@@ -29,10 +29,12 @@ export class DailySummaryService {
       summary.income_total += payload.amount;
       summary.categories_income[payload.category] =
         (summary.categories_income[payload.category] || 0) + payload.amount;
+      summary.markModified('categories_income');
     } else {
       summary.expense_total += payload.amount;
       summary.categories_expense[payload.category] =
         (summary.categories_expense[payload.category] || 0) + payload.amount;
+      summary.markModified('categories_expense');
     }
 
     summary.net_profit = summary.income_total - summary.expense_total;
