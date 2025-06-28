@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CategoriesModule } from './monitoring/categories/categories.module';
+import { PaymentMethodsModule } from './monitoring/payment-methods/payment-methods.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { CategoriesModule } from './monitoring/categories/categories.module';
       inject: [ConfigService],
     }),
     CategoriesModule,
+    PaymentMethodsModule,
   ],
 })
 export class AppModule {}
