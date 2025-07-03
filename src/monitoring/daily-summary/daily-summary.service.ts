@@ -40,4 +40,14 @@ export class DailySummaryService {
     summary.net_profit = summary.income_total - summary.expense_total;
     await summary.save();
   }
+
+  async getNetProfitByDate(date: Date): Promise<number> {
+    const dateString = date.toISOString().split('T')[0];
+    const summary = await this.summaryModel
+      .findOne({ date: new Date(dateString) })
+      .select('net_profit')
+      .lean();
+
+    return summary ? summary.net_profit : 0;
+  }
 }

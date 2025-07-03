@@ -6,6 +6,7 @@ import { CategoriesModule } from './monitoring/categories/categories.module';
 import { PaymentMethodsModule } from './monitoring/payment-methods/payment-methods.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { SummaryTransactionsModule } from './monitoring/summary-transactions/summary-transactions.module';
+import { FinanceModule } from './finance/finance.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { SummaryTransactionsModule } from './monitoring/summary-transactions/sum
     PaymentMethodsModule,
     TransactionsModule,
     SummaryTransactionsModule,
+    FinanceModule,
   ],
 })
 export class AppModule {}
