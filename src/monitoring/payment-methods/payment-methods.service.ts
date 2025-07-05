@@ -17,4 +17,8 @@ export class PaymentMethodsService {
     const created = new this.paymentMethodModel(createPaymentMethodDto);
     return created.save();
   }
+
+  async findAll(): Promise<PaymentMethod[]> {
+    return this.paymentMethodModel.find().lean();
+  }
 }
