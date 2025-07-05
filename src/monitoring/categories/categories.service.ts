@@ -15,4 +15,8 @@ export class CategoriesService {
     const created = new this.categoryModel(createCategoryDto);
     return created.save();
   }
+
+  async findAll(): Promise<Category[]> {
+    return this.categoryModel.find().lean();
+  }
 }
