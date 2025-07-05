@@ -8,8 +8,11 @@ export class PaymentMethod {
   @Prop({ required: true })
   name: string;
 
-  @Prop({ required: true, enum: ['cash', 'debit', 'credit'] })
+  @Prop({ required: true, enum: ['credit', 'debit'] })
   type: string;
+
+  @Prop({ required: true })
+  color: string;
 }
 
 export const PaymentMethodSchema = SchemaFactory.createForClass(PaymentMethod);
