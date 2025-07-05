@@ -89,5 +89,31 @@ export class MonthlySummaryService {
     summary.markModified('totals');
     summary.markModified('final_balance');
     await summary.save();
+
+    // Propagate changes to subsequent months if they exist
+    let prevSummary = summary;
+    let nextMonth = month === 12 ? 1 : month + 1;
+    let nextYear = month === 12 ? year + 1 : year;
+
+    while (true) {
+      const nextId = `${nextYear}-${String(nextMonth).padStart(2, '0')}`;
+      const nextSummary = await this.summaryModel.findById(nextId);
+      if (!nextSummary) {
+        break;
+      }
+
+      nextSummary.initial_balance = { ...prevSummary.final_balance };
+      nextSummary.final_balance[nextSummary ? payload.payment_method : ''] =
+        (nextSummary.final_balance[payload.payment_method] || 0) +
+        (payload.type === 'income' ? payload.amount : -payload.amount);
+
+      nextSummary.markModified('initial_balance');
+      nextSummary.markModified('final_balance');
+      await nextSummary.save();
+
+      prevSummary = nextSummary;
+      nextMonth = nextMonth === 12 ? 1 : nextMonth + 1;
+      nextYear = nextMonth === 1 ? nextYear + 1 : nextYear;
+    }
   }
 }
