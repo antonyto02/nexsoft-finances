@@ -92,4 +92,28 @@ export class TransactionsService {
 
     return transaction;
   }
+
+  async remove(id: string): Promise<void> {
+    const transaction = await this.transactionModel.findById(id);
+    if (!transaction) {
+      throw new Error('Transaction not found');
+    }
+
+    await this.dailySummaryService.updateSummary({
+      date: transaction.date,
+      type: transaction.type as 'income' | 'expense',
+      category: transaction.category,
+      amount: -transaction.amount,
+    });
+
+    await this.monthlySummaryService.updateSummary({
+      date: transaction.date,
+      type: transaction.type as 'income' | 'expense',
+      category: transaction.category,
+      amount: -transaction.amount,
+      payment_method: transaction.method,
+    });
+
+    await this.transactionModel.deleteOne({ _id: id });
+  }
 }
