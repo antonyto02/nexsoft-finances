@@ -1,4 +1,4 @@
-import { IsIn, IsNotEmpty, IsString } from 'class-validator';
+import { IsIn, IsNotEmpty, IsString, Matches } from 'class-validator';
 
 export class CreatePaymentMethodDto {
   @IsString()
@@ -7,6 +7,11 @@ export class CreatePaymentMethodDto {
 
   @IsString()
   @IsNotEmpty()
-  @IsIn(['cash', 'debit', 'credit'])
+  @IsIn(['credit', 'debit'])
   type: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^#[0-9A-Fa-f]{6}$/)
+  color: string;
 }
