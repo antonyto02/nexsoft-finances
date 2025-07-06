@@ -42,10 +42,13 @@ export class FinanceController {
           )
         : 0;
 
-    const incomeCategories = Object.entries(summary.categories_income).map(
+    const incomeCategoriesRaw = summary.categories_income ?? {};
+    const expenseCategoriesRaw = summary.categories_expense ?? {};
+
+    const incomeCategories = Object.entries(incomeCategoriesRaw).map(
       ([name, amount]) => ({ name, amount }),
     );
-    const expenseCategories = Object.entries(summary.categories_expense).map(
+    const expenseCategories = Object.entries(expenseCategoriesRaw).map(
       ([name, amount]) => ({ name, amount }),
     );
 
