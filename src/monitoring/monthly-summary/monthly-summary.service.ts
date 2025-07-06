@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { MonthlySummary, MonthlySummaryDocument } from './monthly-summary.schema';
+import {
+  MonthlySummary,
+  MonthlySummaryDocument,
+} from './monthly-summary.schema';
 
 interface UpdatePayload {
   date: Date;
@@ -38,7 +41,12 @@ export class MonthlySummaryService {
       month,
       year,
       initial_balance,
-      totals: { total_income: 0, total_expense: 0, net_profit: 0, profit_margin: 0 },
+      totals: {
+        total_income: 0,
+        total_expense: 0,
+        net_profit: 0,
+        profit_margin: 0,
+      },
       categories_income: {},
       categories_expense: {},
       final_balance: { ...initial_balance },
@@ -78,7 +86,8 @@ export class MonthlySummaryService {
       summary.markModified('categories_expense');
     }
 
-    summary.totals.net_profit = summary.totals.total_income - summary.totals.total_expense;
+    summary.totals.net_profit =
+      summary.totals.total_income - summary.totals.total_expense;
     if (summary.totals.total_income > 0) {
       summary.totals.profit_margin =
         (summary.totals.net_profit / summary.totals.total_income) * 100;
@@ -114,11 +123,15 @@ export class MonthlySummaryService {
       prevSummary = nextSummary;
       nextMonth = nextMonth === 12 ? 1 : nextMonth + 1;
       nextYear = nextMonth === 1 ? nextYear + 1 : nextYear;
-
     }
   }
 
-  async registerTransfer(payload: { date: Date; from: string; to: string; amount: number; }): Promise<string[]> {
+  async registerTransfer(payload: {
+    date: Date;
+    from: string;
+    to: string;
+    amount: number;
+  }): Promise<string[]> {
     const year = payload.date.getUTCFullYear();
     const month = payload.date.getUTCMonth() + 1;
     const id = `${year}-${String(month).padStart(2, '0')}`;
@@ -168,5 +181,9 @@ export class MonthlySummaryService {
     }
 
     return updated;
+  }
+
+  async getSummariesByYear(year: number): Promise<MonthlySummary[]> {
+    return this.summaryModel.find({ year }).sort({ month: 1 }).lean();
   }
 }

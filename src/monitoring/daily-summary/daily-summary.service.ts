@@ -20,7 +20,9 @@ export class DailySummaryService {
   async updateSummary(payload: UpdatePayload): Promise<void> {
     const dateString = payload.date.toISOString().split('T')[0];
 
-    let summary = await this.summaryModel.findOne({ date: new Date(dateString) });
+    let summary = await this.summaryModel.findOne({
+      date: new Date(dateString),
+    });
     if (!summary) {
       summary = new this.summaryModel({ date: new Date(dateString) });
     }
@@ -51,12 +53,23 @@ export class DailySummaryService {
     return summary ? summary.net_profit : 0;
   }
 
-  async getSummaryByDate(
-    date: Date,
-  ): Promise<DailySummary | null> {
+  async getSummaryByDate(date: Date): Promise<DailySummary | null> {
     const dateString = date.toISOString().split('T')[0];
+    return this.summaryModel.findOne({ date: new Date(dateString) }).lean();
+  }
+
+  async getSummariesByMonth(
+    year: number,
+    month: number,
+  ): Promise<DailySummary[]> {
+    const start = new Date(Date.UTC(year, month - 1, 1));
+    const end = new Date(
+      Date.UTC(month === 12 ? year + 1 : year, month === 12 ? 0 : month, 1),
+    );
+
     return this.summaryModel
-      .findOne({ date: new Date(dateString) })
+      .find({ date: { $gte: start, $lt: end } })
+      .sort({ date: 1 })
       .lean();
   }
 }
