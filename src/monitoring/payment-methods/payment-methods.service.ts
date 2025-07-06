@@ -10,6 +10,7 @@ import { PaymentMethod, PaymentMethodDocument } from './payment-method.schema';
 import { CreatePaymentMethodDto } from './dto/create-payment-method.dto';
 import { UpdatePaymentMethodDto } from './dto/update-payment-method.dto';
 import { Transaction, TransactionDocument } from '../../transactions/transaction.schema';
+import { MonthlySummary, MonthlySummaryDocument } from '../monthly-summary/monthly-summary.schema';
 
 @Injectable()
 export class PaymentMethodsService {
@@ -18,6 +19,8 @@ export class PaymentMethodsService {
     private readonly paymentMethodModel: Model<PaymentMethodDocument>,
     @InjectModel(Transaction.name)
     private readonly transactionModel: Model<TransactionDocument>,
+    @InjectModel(MonthlySummary.name)
+    private readonly monthlySummaryModel: Model<MonthlySummaryDocument>,
   ) {}
 
   async create(
@@ -65,6 +68,32 @@ export class PaymentMethodsService {
         { method: oldName },
         { $set: { method: dto.name } },
       );
+
+      const monthlyDocs = await this.monthlySummaryModel.find({
+        $or: [
+          { [`initial_balance.${oldName}`]: { $exists: true } },
+          { [`final_balance.${oldName}`]: { $exists: true } },
+        ],
+      });
+
+      for (const doc of monthlyDocs) {
+        let modified = false;
+        if (doc.initial_balance && doc.initial_balance[oldName] !== undefined) {
+          doc.initial_balance[dto.name] = doc.initial_balance[oldName];
+          delete doc.initial_balance[oldName];
+          doc.markModified('initial_balance');
+          modified = true;
+        }
+        if (doc.final_balance && doc.final_balance[oldName] !== undefined) {
+          doc.final_balance[dto.name] = doc.final_balance[oldName];
+          delete doc.final_balance[oldName];
+          doc.markModified('final_balance');
+          modified = true;
+        }
+        if (modified) {
+          await doc.save();
+        }
+      }
     }
   }
 }
