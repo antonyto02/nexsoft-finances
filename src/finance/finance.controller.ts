@@ -15,6 +15,7 @@ export class FinanceController {
     @Query('view') view = 'daily',
     @Query('year') year?: string,
     @Query('month') month?: string,
+    @Query('day') day?: string,
   ) {
     if (range === 'today') {
       if (view !== 'daily') {
@@ -391,7 +392,66 @@ export class FinanceController {
       }
     }
 
+    let dayNum: number | undefined;
+    if (day !== undefined) {
+      dayNum = parseInt(day, 10);
+      if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) {
+        throw new BadRequestException('Invalid day');
+      }
+    }
+
+    if (dayNum && !monthNum) {
+      throw new BadRequestException('day requires month');
+    }
+
     if (monthNum) {
+      if (dayNum) {
+        const date = new Date(Date.UTC(yearNum, monthNum - 1, dayNum));
+        const summary = await this.dailySummaryService.getSummaryByDate(date);
+
+        if (!summary) {
+          return {
+            totals: {
+              income: 0,
+              expense: 0,
+              net_profit: 0,
+              profit_margin: 0,
+            },
+            categories: { income: [], expense: [] },
+            income_progression: [],
+            expense_progression: [],
+            net_profit_progression: [],
+          };
+        }
+
+        const profitMargin =
+          summary.income_total > 0
+            ? parseFloat(
+                ((summary.net_profit / summary.income_total) * 100).toFixed(2),
+              )
+            : 0;
+
+        const incomeCategories = Object.entries(
+          summary.categories_income ?? {},
+        ).map(([name, amount]) => ({ name, amount }));
+        const expenseCategories = Object.entries(
+          summary.categories_expense ?? {},
+        ).map(([name, amount]) => ({ name, amount }));
+
+        return {
+          totals: {
+            income: summary.income_total,
+            expense: summary.expense_total,
+            net_profit: summary.net_profit,
+            profit_margin: profitMargin,
+          },
+          categories: { income: incomeCategories, expense: expenseCategories },
+          income_progression: [],
+          expense_progression: [],
+          net_profit_progression: [],
+        };
+      }
+
       const summaries = await this.dailySummaryService.getSummariesByMonth(
         yearNum,
         monthNum,
