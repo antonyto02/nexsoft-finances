@@ -186,4 +186,15 @@ export class MonthlySummaryService {
   async getSummariesByYear(year: number): Promise<MonthlySummary[]> {
     return this.summaryModel.find({ year }).sort({ month: 1 }).lean();
   }
+
+  async getSummariesByIds(ids: string[]): Promise<MonthlySummary[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    return this.summaryModel
+      .find({ _id: { $in: ids } })
+      .sort({ year: 1, month: 1 })
+      .lean();
+  }
 }
