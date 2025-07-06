@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Patch, Param } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
+import { UpdateCategoryDto } from './dto/update-category.dto';
 
 @Controller('monitoring/categories')
 export class CategoriesController {
@@ -19,5 +20,14 @@ export class CategoriesController {
       data,
       message: 'Category created successfully',
     };
+  }
+
+  @Patch(':oldName')
+  async update(
+    @Param('oldName') oldName: string,
+    @Body() dto: UpdateCategoryDto,
+  ) {
+    await this.categoriesService.update(oldName, dto);
+    return { message: 'Categor\u00eda actualizada correctamente' };
   }
 }
