@@ -110,6 +110,20 @@ export class PaymentMethodsService {
     if (!method) {
       throw new NotFoundException('Payment method not found');
     }
+    const latestSummary = await this.monthlySummaryModel
+      .findOne()
+      .sort({ year: -1, month: -1 })
+      .lean();
+    if (
+      latestSummary &&
+      latestSummary.final_balance &&
+      latestSummary.final_balance[name] !== undefined &&
+      latestSummary.final_balance[name] !== 0
+    ) {
+      throw new BadRequestException(
+        'Cannot delete. The balance for this method is not zero.',
+      );
+    }
     method.is_active = false;
     await method.save();
   }
