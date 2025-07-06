@@ -50,4 +50,13 @@ export class DailySummaryService {
 
     return summary ? summary.net_profit : 0;
   }
+
+  async getSummaryByDate(
+    date: Date,
+  ): Promise<DailySummary | null> {
+    const dateString = date.toISOString().split('T')[0];
+    return this.summaryModel
+      .findOne({ date: new Date(dateString) })
+      .lean();
+  }
 }
