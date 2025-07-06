@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Patch, Param } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -29,5 +37,11 @@ export class CategoriesController {
   ) {
     await this.categoriesService.update(oldName, dto);
     return { message: 'Categor\u00eda actualizada correctamente' };
+  }
+
+  @Delete(':name')
+  async remove(@Param('name') name: string) {
+    await this.categoriesService.remove(name);
+    return { message: 'Category deleted successfully' };
   }
 }
