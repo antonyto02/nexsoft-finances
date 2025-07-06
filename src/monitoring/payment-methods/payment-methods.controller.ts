@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Patch, Param } from '@nestjs/common';
 import { PaymentMethodsService } from './payment-methods.service';
 import { CreatePaymentMethodDto } from './dto/create-payment-method.dto';
+import { UpdatePaymentMethodDto } from './dto/update-payment-method.dto';
 
 @Controller('monitoring/payment-methods')
 export class PaymentMethodsController {
@@ -19,5 +20,14 @@ export class PaymentMethodsController {
       message: 'Payment method created successfully',
       data,
     };
+  }
+
+  @Patch(':oldName')
+  async update(
+    @Param('oldName') oldName: string,
+    @Body() dto: UpdatePaymentMethodDto,
+  ) {
+    await this.paymentMethodsService.update(oldName, dto);
+    return { message: 'Payment method updated successfully' };
   }
 }
