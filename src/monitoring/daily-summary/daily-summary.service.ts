@@ -72,4 +72,14 @@ export class DailySummaryService {
       .sort({ date: 1 })
       .lean();
   }
+
+  async getSummariesByRange(
+    start: Date,
+    end: Date,
+  ): Promise<DailySummary[]> {
+    return this.summaryModel
+      .find({ date: { $gte: start, $lt: end } })
+      .sort({ date: 1 })
+      .lean();
+  }
 }
