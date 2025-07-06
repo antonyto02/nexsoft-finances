@@ -7,6 +7,7 @@ import { PaymentMethodsModule } from './monitoring/payment-methods/payment-metho
 import { TransactionsModule } from './transactions/transactions.module';
 import { SummaryTransactionsModule } from './monitoring/summary-transactions/summary-transactions.module';
 import { FinanceModule } from './finance/finance.module';
+import { TransferModule } from './controllers/transfer.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { FinanceModule } from './finance/finance.module';
     TransactionsModule,
     SummaryTransactionsModule,
     FinanceModule,
+    TransferModule,
   ],
 })
 export class AppModule {}
