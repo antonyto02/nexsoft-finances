@@ -155,6 +155,132 @@ export class FinanceController {
     }
 
     if (
+      (range === 'last-3-months' ||
+        range === 'last-6-months' ||
+        range === 'last-12-months') &&
+      view === 'weekly'
+    ) {
+      const months = parseInt(range.split('-')[1], 10);
+      const now = new Date();
+      const utcToday = new Date(
+        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+      );
+      const end = new Date(utcToday);
+      end.setUTCDate(end.getUTCDate() + 1);
+
+      const start = new Date(utcToday);
+      start.setUTCMonth(start.getUTCMonth() - months);
+      const startDay = start.getUTCDay();
+      const diff = (startDay + 6) % 7;
+      start.setUTCDate(start.getUTCDate() - diff);
+
+      const summaries = await this.dailySummaryService.getSummariesByRange(
+        start,
+        end,
+      );
+
+      const weekMap: Record<
+        string,
+        {
+          income: number;
+          expense: number;
+          categories_income: Record<string, number>;
+          categories_expense: Record<string, number>;
+        }
+      > = {};
+
+      for (const s of summaries) {
+        const d = new Date(s.date);
+        const day = d.getUTCDay();
+        const monday = new Date(d);
+        monday.setUTCDate(d.getUTCDate() - ((day + 6) % 7));
+        const key = monday.toISOString().split('T')[0];
+
+        if (!weekMap[key]) {
+          weekMap[key] = {
+            income: 0,
+            expense: 0,
+            categories_income: {},
+            categories_expense: {},
+          };
+        }
+
+        weekMap[key].income += s.income_total;
+        weekMap[key].expense += s.expense_total;
+
+        for (const [name, amount] of Object.entries(s.categories_income ?? {})) {
+          weekMap[key].categories_income[name] =
+            (weekMap[key].categories_income[name] || 0) + (amount as number);
+        }
+        for (const [name, amount] of Object.entries(
+          s.categories_expense ?? {},
+        )) {
+          weekMap[key].categories_expense[name] =
+            (weekMap[key].categories_expense[name] || 0) + (amount as number);
+        }
+      }
+
+      const totals = { income: 0, expense: 0, net_profit: 0, profit_margin: 0 };
+      const incomeMap: Record<string, number> = {};
+      const expenseMap: Record<string, number> = {};
+      const incomeProgression: Array<{ x: string; y: number }> = [];
+      const expenseProgression: Array<{ x: string; y: number }> = [];
+      const netProfitProgression: Array<{ x: string; y: number }> = [];
+
+      const cursor = new Date(start);
+      while (cursor <= utcToday) {
+        const key = cursor.toISOString().split('T')[0];
+        const data = weekMap[key];
+
+        const income = data ? data.income : 0;
+        const expense = data ? data.expense : 0;
+        const netProfit = income - expense;
+
+        totals.income += income;
+        totals.expense += expense;
+
+        incomeProgression.push({ x: key, y: income });
+        expenseProgression.push({ x: key, y: expense });
+        netProfitProgression.push({ x: key, y: netProfit });
+
+        if (data) {
+          for (const [name, amount] of Object.entries(data.categories_income)) {
+            incomeMap[name] = (incomeMap[name] || 0) + amount;
+          }
+          for (const [name, amount] of Object.entries(data.categories_expense)) {
+            expenseMap[name] = (expenseMap[name] || 0) + amount;
+          }
+        }
+
+        cursor.setUTCDate(cursor.getUTCDate() + 7);
+      }
+
+      totals.net_profit = totals.income - totals.expense;
+      totals.profit_margin =
+        totals.income > 0
+          ? parseFloat(((totals.net_profit / totals.income) * 100).toFixed(2))
+          : 0;
+
+      const incomeCategories = Object.entries(incomeMap)
+        .filter(([, amount]) => amount > 0)
+        .map(([name, amount]) => ({ name, amount }));
+      const expenseCategories = Object.entries(expenseMap)
+        .filter(([, amount]) => amount > 0)
+        .map(([name, amount]) => ({ name, amount }));
+
+      return {
+        totals,
+        categories: {
+          income: incomeCategories,
+          expense: expenseCategories,
+        },
+        income_progression: incomeProgression,
+        expense_progression: expenseProgression,
+        net_profit_progression: netProfitProgression,
+      };
+    }
+
+    if (
       range === 'last-3-months' ||
       range === 'last-6-months' ||
       range === 'last-12-months'
