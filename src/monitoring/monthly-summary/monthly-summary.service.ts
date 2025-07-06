@@ -114,6 +114,59 @@ export class MonthlySummaryService {
       prevSummary = nextSummary;
       nextMonth = nextMonth === 12 ? 1 : nextMonth + 1;
       nextYear = nextMonth === 1 ? nextYear + 1 : nextYear;
+
     }
+  }
+
+  async registerTransfer(payload: { date: Date; from: string; to: string; amount: number; }): Promise<string[]> {
+    const year = payload.date.getUTCFullYear();
+    const month = payload.date.getUTCMonth() + 1;
+    const id = `${year}-${String(month).padStart(2, '0')}`;
+
+    let summary = await this.summaryModel.findById(id);
+    if (!summary) {
+      summary = await this.createNewSummary(year, month);
+    }
+
+    if (!(payload.from in summary.final_balance)) {
+      throw new Error('Source payment method not found in summary');
+    }
+
+    summary.final_balance[payload.from] -= payload.amount;
+    summary.final_balance[payload.to] =
+      (summary.final_balance[payload.to] || 0) + payload.amount;
+
+    summary.markModified('final_balance');
+    await summary.save();
+
+    const updated: string[] = [id];
+    let prevSummary = summary;
+    let nextMonth = month === 12 ? 1 : month + 1;
+    let nextYear = month === 12 ? year + 1 : year;
+
+    while (true) {
+      const nextId = `${nextYear}-${String(nextMonth).padStart(2, '0')}`;
+      const nextSummary = await this.summaryModel.findById(nextId);
+      if (!nextSummary) {
+        break;
+      }
+
+      nextSummary.initial_balance = { ...prevSummary.final_balance };
+      nextSummary.final_balance[payload.from] =
+        (nextSummary.final_balance[payload.from] || 0) - payload.amount;
+      nextSummary.final_balance[payload.to] =
+        (nextSummary.final_balance[payload.to] || 0) + payload.amount;
+
+      nextSummary.markModified('initial_balance');
+      nextSummary.markModified('final_balance');
+      await nextSummary.save();
+
+      updated.push(nextId);
+      prevSummary = nextSummary;
+      nextMonth = nextMonth === 12 ? 1 : nextMonth + 1;
+      nextYear = nextMonth === 1 ? nextYear + 1 : nextYear;
+    }
+
+    return updated;
   }
 }
