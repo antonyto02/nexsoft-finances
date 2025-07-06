@@ -9,8 +9,14 @@ import { Model } from 'mongoose';
 import { PaymentMethod, PaymentMethodDocument } from './payment-method.schema';
 import { CreatePaymentMethodDto } from './dto/create-payment-method.dto';
 import { UpdatePaymentMethodDto } from './dto/update-payment-method.dto';
-import { Transaction, TransactionDocument } from '../../transactions/transaction.schema';
-import { MonthlySummary, MonthlySummaryDocument } from '../monthly-summary/monthly-summary.schema';
+import {
+  Transaction,
+  TransactionDocument,
+} from '../../transactions/transaction.schema';
+import {
+  MonthlySummary,
+  MonthlySummaryDocument,
+} from '../monthly-summary/monthly-summary.schema';
 
 @Injectable()
 export class PaymentMethodsService {
@@ -26,7 +32,10 @@ export class PaymentMethodsService {
   async create(
     createPaymentMethodDto: CreatePaymentMethodDto,
   ): Promise<PaymentMethod> {
-    const created = new this.paymentMethodModel(createPaymentMethodDto);
+    const created = new this.paymentMethodModel({
+      ...createPaymentMethodDto,
+      is_active: true,
+    });
     return created.save();
   }
 
@@ -34,10 +43,7 @@ export class PaymentMethodsService {
     return this.paymentMethodModel.find().lean();
   }
 
-  async update(
-    oldName: string,
-    dto: UpdatePaymentMethodDto,
-  ): Promise<void> {
+  async update(oldName: string, dto: UpdatePaymentMethodDto): Promise<void> {
     if (!dto.name && !dto.color) {
       throw new BadRequestException('name or color is required');
     }
@@ -48,7 +54,9 @@ export class PaymentMethodsService {
     }
 
     if (dto.name && dto.name !== oldName) {
-      const conflict = await this.paymentMethodModel.findOne({ name: dto.name });
+      const conflict = await this.paymentMethodModel.findOne({
+        name: dto.name,
+      });
       if (conflict) {
         throw new ConflictException('Payment method name already exists');
       }
@@ -95,5 +103,14 @@ export class PaymentMethodsService {
         }
       }
     }
+  }
+
+  async remove(name: string): Promise<void> {
+    const method = await this.paymentMethodModel.findOne({ name });
+    if (!method) {
+      throw new NotFoundException('Payment method not found');
+    }
+    method.is_active = false;
+    await method.save();
   }
 }

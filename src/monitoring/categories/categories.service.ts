@@ -36,7 +36,10 @@ export class CategoriesService {
   ) {}
 
   async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
-    const created = new this.categoryModel(createCategoryDto);
+    const created = new this.categoryModel({
+      ...createCategoryDto,
+      is_active: true,
+    });
     return created.save();
   }
 
@@ -44,10 +47,7 @@ export class CategoriesService {
     return this.categoryModel.find().lean();
   }
 
-  async update(
-    oldName: string,
-    dto: UpdateCategoryDto,
-  ): Promise<void> {
+  async update(oldName: string, dto: UpdateCategoryDto): Promise<void> {
     if (!dto.newName) {
       throw new BadRequestException('newName is required');
     }
@@ -78,7 +78,10 @@ export class CategoriesService {
     });
 
     for (const doc of dailyDocs) {
-      if (doc.categories_income && doc.categories_income[oldName] !== undefined) {
+      if (
+        doc.categories_income &&
+        doc.categories_income[oldName] !== undefined
+      ) {
         doc.categories_income[dto.newName] = doc.categories_income[oldName];
         delete doc.categories_income[oldName];
         doc.markModified('categories_income');
@@ -120,5 +123,14 @@ export class CategoriesService {
       }
       await doc.save();
     }
+  }
+
+  async remove(name: string): Promise<void> {
+    const category = await this.categoryModel.findOne({ name });
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+    category.is_active = false;
+    await category.save();
   }
 }
