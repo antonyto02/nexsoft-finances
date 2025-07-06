@@ -114,9 +114,9 @@ export class MonthlySummaryService {
       prevSummary = nextSummary;
       nextMonth = nextMonth === 12 ? 1 : nextMonth + 1;
       nextYear = nextMonth === 1 ? nextYear + 1 : nextYear;
+
     }
   }
-}
 
   async registerTransfer(payload: { date: Date; from: string; to: string; amount: number; }): Promise<string[]> {
     const year = payload.date.getUTCFullYear();
