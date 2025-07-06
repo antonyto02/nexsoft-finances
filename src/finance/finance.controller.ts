@@ -154,6 +154,96 @@ export class FinanceController {
       };
     }
 
+    if (
+      range === 'last-3-months' ||
+      range === 'last-6-months' ||
+      range === 'last-12-months'
+    ) {
+      if (view !== 'monthly') {
+        throw new BadRequestException('Invalid range or view');
+      }
+
+      const months = parseInt(range.split('-')[1], 10);
+      const now = new Date();
+      let year = now.getUTCFullYear();
+      let month = now.getUTCMonth() + 1;
+
+      const ids: string[] = [];
+      for (let i = 0; i < months; i++) {
+        ids.unshift(`${year}-${String(month).padStart(2, '0')}`);
+        month -= 1;
+        if (month === 0) {
+          month = 12;
+          year -= 1;
+        }
+      }
+
+      const summaries = await this.monthlySummaryService.getSummariesByIds(ids);
+      const summaryMap: Record<string, (typeof summaries)[number]> = {};
+      for (const s of summaries) {
+        const id = `${s.year}-${String(s.month).padStart(2, '0')}`;
+        summaryMap[id] = s as any;
+      }
+
+      const totals = { income: 0, expense: 0, net_profit: 0, profit_margin: 0 };
+      const incomeMap: Record<string, number> = {};
+      const expenseMap: Record<string, number> = {};
+      const incomeProgression: Array<{ x: string; y: number }> = [];
+      const expenseProgression: Array<{ x: string; y: number }> = [];
+      const netProfitProgression: Array<{ x: string; y: number }> = [];
+
+      for (const id of ids) {
+        const summary = summaryMap[id];
+        const income = summary ? summary.totals.total_income : 0;
+        const expense = summary ? summary.totals.total_expense : 0;
+        const netProfit = summary ? summary.totals.net_profit : 0;
+
+        totals.income += income;
+        totals.expense += expense;
+
+        incomeProgression.push({ x: id, y: income });
+        expenseProgression.push({ x: id, y: expense });
+        netProfitProgression.push({ x: id, y: netProfit });
+
+        if (summary) {
+          for (const [name, amount] of Object.entries(
+            summary.categories_income ?? {},
+          )) {
+            incomeMap[name] = (incomeMap[name] || 0) + (amount as number);
+          }
+          for (const [name, amount] of Object.entries(
+            summary.categories_expense ?? {},
+          )) {
+            expenseMap[name] = (expenseMap[name] || 0) + (amount as number);
+          }
+        }
+      }
+
+      totals.net_profit = totals.income - totals.expense;
+      totals.profit_margin =
+        totals.income > 0
+          ? parseFloat(((totals.net_profit / totals.income) * 100).toFixed(2))
+          : 0;
+
+      const incomeCategories = Object.entries(incomeMap)
+        .filter(([, amount]) => amount > 0)
+        .map(([name, amount]) => ({ name, amount }));
+      const expenseCategories = Object.entries(expenseMap)
+        .filter(([, amount]) => amount > 0)
+        .map(([name, amount]) => ({ name, amount }));
+
+      return {
+        totals,
+        categories: {
+          income: incomeCategories,
+          expense: expenseCategories,
+        },
+        income_progression: incomeProgression,
+        expense_progression: expenseProgression,
+        net_profit_progression: netProfitProgression,
+      };
+    }
+
     if (range !== 'custom') {
       throw new BadRequestException('Invalid range or view');
     }
