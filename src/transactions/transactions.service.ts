@@ -16,6 +16,18 @@ export class TransactionsService {
     private readonly monthlySummaryService: MonthlySummaryService,
   ) {}
 
+  private extractDestination(concept: string): string | null {
+    const transferPrefix = 'Transferencia a ';
+    const payPrefix = 'Pago a ';
+    if (concept.startsWith(transferPrefix)) {
+      return concept.slice(transferPrefix.length);
+    }
+    if (concept.startsWith(payPrefix)) {
+      return concept.slice(payPrefix.length);
+    }
+    return null;
+  }
+
   async create(
     createTransactionDto: CreateTransactionDto,
   ): Promise<Transaction> {
@@ -52,20 +64,35 @@ export class TransactionsService {
       throw new Error('Transaction not found');
     }
 
-    await this.dailySummaryService.updateSummary({
-      date: original.date,
-      type: original.type as 'income' | 'expense',
-      category: original.category,
-      amount: -original.amount,
-    });
+    const originalIsTransfer =
+      original.category === 'Transferencia' || original.category === 'Pago de TDC';
 
-    await this.monthlySummaryService.updateSummary({
-      date: original.date,
-      type: original.type as 'income' | 'expense',
-      category: original.category,
-      amount: -original.amount,
-      payment_method: original.method,
-    });
+    if (originalIsTransfer) {
+      const dest = this.extractDestination(original.concept);
+      if (dest) {
+        await this.monthlySummaryService.registerTransfer({
+          date: original.date,
+          from: original.method,
+          to: dest,
+          amount: -original.amount,
+        });
+      }
+    } else {
+      await this.dailySummaryService.updateSummary({
+        date: original.date,
+        type: original.type as 'income' | 'expense',
+        category: original.category,
+        amount: -original.amount,
+      });
+
+      await this.monthlySummaryService.updateSummary({
+        date: original.date,
+        type: original.type as 'income' | 'expense',
+        category: original.category,
+        amount: -original.amount,
+        payment_method: original.method,
+      });
+    }
 
     await this.transactionModel.deleteOne({ _id: id });
 
@@ -75,20 +102,36 @@ export class TransactionsService {
     });
     const transaction = await created.save();
 
-    await this.dailySummaryService.updateSummary({
-      date: transaction.date,
-      type: transaction.type as 'income' | 'expense',
-      category: transaction.category,
-      amount: transaction.amount,
-    });
+    const newIsTransfer =
+      transaction.category === 'Transferencia' ||
+      transaction.category === 'Pago de TDC';
 
-    await this.monthlySummaryService.updateSummary({
-      date: transaction.date,
-      type: transaction.type as 'income' | 'expense',
-      category: transaction.category,
-      amount: transaction.amount,
-      payment_method: transaction.method,
-    });
+    if (newIsTransfer) {
+      const dest = this.extractDestination(transaction.concept);
+      if (dest) {
+        await this.monthlySummaryService.registerTransfer({
+          date: transaction.date,
+          from: transaction.method,
+          to: dest,
+          amount: transaction.amount,
+        });
+      }
+    } else {
+      await this.dailySummaryService.updateSummary({
+        date: transaction.date,
+        type: transaction.type as 'income' | 'expense',
+        category: transaction.category,
+        amount: transaction.amount,
+      });
+
+      await this.monthlySummaryService.updateSummary({
+        date: transaction.date,
+        type: transaction.type as 'income' | 'expense',
+        category: transaction.category,
+        amount: transaction.amount,
+        payment_method: transaction.method,
+      });
+    }
 
     return transaction;
   }
@@ -99,20 +142,36 @@ export class TransactionsService {
       throw new Error('Transaction not found');
     }
 
-    await this.dailySummaryService.updateSummary({
-      date: transaction.date,
-      type: transaction.type as 'income' | 'expense',
-      category: transaction.category,
-      amount: -transaction.amount,
-    });
+    const isTransfer =
+      transaction.category === 'Transferencia' ||
+      transaction.category === 'Pago de TDC';
 
-    await this.monthlySummaryService.updateSummary({
-      date: transaction.date,
-      type: transaction.type as 'income' | 'expense',
-      category: transaction.category,
-      amount: -transaction.amount,
-      payment_method: transaction.method,
-    });
+    if (isTransfer) {
+      const dest = this.extractDestination(transaction.concept);
+      if (dest) {
+        await this.monthlySummaryService.registerTransfer({
+          date: transaction.date,
+          from: transaction.method,
+          to: dest,
+          amount: -transaction.amount,
+        });
+      }
+    } else {
+      await this.dailySummaryService.updateSummary({
+        date: transaction.date,
+        type: transaction.type as 'income' | 'expense',
+        category: transaction.category,
+        amount: -transaction.amount,
+      });
+
+      await this.monthlySummaryService.updateSummary({
+        date: transaction.date,
+        type: transaction.type as 'income' | 'expense',
+        category: transaction.category,
+        amount: -transaction.amount,
+        payment_method: transaction.method,
+      });
+    }
 
     await this.transactionModel.deleteOne({ _id: id });
   }
