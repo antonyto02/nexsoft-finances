@@ -70,6 +70,18 @@ $ mau deploy
 
 With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
 
+## Finances summary endpoint
+
+The endpoint `/finances/summary` accepts weekly filters for the last 3, 6 or 12 months:
+
+```
+GET /finances/summary?range=last-3-months&view=weekly
+GET /finances/summary?range=last-6-months&view=weekly
+GET /finances/summary?range=last-12-months&view=weekly
+```
+
+The response aggregates income and expenses per week. Weeks without data are included with amounts set to `0`.
+
 ## Resources
 
 Check out a few resources that may come in handy when working with NestJS:

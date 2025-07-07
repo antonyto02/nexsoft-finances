@@ -10,6 +10,9 @@ export class Category {
 
   @Prop({ required: true })
   type: string;
+
+  @Prop({ default: true })
+  is_active: boolean;
 }
 
 export const CategorySchema = SchemaFactory.createForClass(Category);

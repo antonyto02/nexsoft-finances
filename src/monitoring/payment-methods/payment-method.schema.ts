@@ -13,6 +13,9 @@ export class PaymentMethod {
 
   @Prop({ required: true })
   color: string;
+
+  @Prop({ default: true })
+  is_active: boolean;
 }
 
 export const PaymentMethodSchema = SchemaFactory.createForClass(PaymentMethod);
