@@ -57,6 +57,12 @@ export class MonthlySummaryService {
   }
 
   async updateSummary(payload: UpdatePayload): Promise<void> {
+    if (
+      payload.category === 'Transferencia' ||
+      payload.category === 'Pago de TDC'
+    ) {
+      return;
+    }
     const year = payload.date.getUTCFullYear();
     const month = payload.date.getUTCMonth() + 1;
     const id = `${year}-${String(month).padStart(2, '0')}`;
