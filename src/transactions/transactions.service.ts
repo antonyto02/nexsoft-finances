@@ -7,6 +7,8 @@ import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { DailySummaryService } from '../monitoring/daily-summary/daily-summary.service';
 import { MonthlySummaryService } from '../monitoring/monthly-summary/monthly-summary.service';
 
+const IGNORE_CATEGORIES = ['Transferencia', 'Pago de TDC'];
+
 @Injectable()
 export class TransactionsService {
   constructor(
@@ -52,20 +54,24 @@ export class TransactionsService {
       throw new Error('Transaction not found');
     }
 
-    await this.dailySummaryService.updateSummary({
-      date: original.date,
-      type: original.type as 'income' | 'expense',
-      category: original.category,
-      amount: -original.amount,
-    });
+    const skipCategories = IGNORE_CATEGORIES.includes(original.category);
 
-    await this.monthlySummaryService.updateSummary({
-      date: original.date,
-      type: original.type as 'income' | 'expense',
-      category: original.category,
-      amount: -original.amount,
-      payment_method: original.method,
-    });
+    if (!skipCategories) {
+      await this.dailySummaryService.updateSummary({
+        date: original.date,
+        type: original.type as 'income' | 'expense',
+        category: original.category,
+        amount: -original.amount,
+      });
+
+      await this.monthlySummaryService.updateSummary({
+        date: original.date,
+        type: original.type as 'income' | 'expense',
+        category: original.category,
+        amount: -original.amount,
+        payment_method: original.method,
+      });
+    }
 
     await this.transactionModel.deleteOne({ _id: id });
 
@@ -75,20 +81,24 @@ export class TransactionsService {
     });
     const transaction = await created.save();
 
-    await this.dailySummaryService.updateSummary({
-      date: transaction.date,
-      type: transaction.type as 'income' | 'expense',
-      category: transaction.category,
-      amount: transaction.amount,
-    });
+    const newSkipCategories = IGNORE_CATEGORIES.includes(transaction.category);
 
-    await this.monthlySummaryService.updateSummary({
-      date: transaction.date,
-      type: transaction.type as 'income' | 'expense',
-      category: transaction.category,
-      amount: transaction.amount,
-      payment_method: transaction.method,
-    });
+    if (!newSkipCategories) {
+      await this.dailySummaryService.updateSummary({
+        date: transaction.date,
+        type: transaction.type as 'income' | 'expense',
+        category: transaction.category,
+        amount: transaction.amount,
+      });
+
+      await this.monthlySummaryService.updateSummary({
+        date: transaction.date,
+        type: transaction.type as 'income' | 'expense',
+        category: transaction.category,
+        amount: transaction.amount,
+        payment_method: transaction.method,
+      });
+    }
 
     return transaction;
   }
@@ -99,20 +109,24 @@ export class TransactionsService {
       throw new Error('Transaction not found');
     }
 
-    await this.dailySummaryService.updateSummary({
-      date: transaction.date,
-      type: transaction.type as 'income' | 'expense',
-      category: transaction.category,
-      amount: -transaction.amount,
-    });
+    const skipCategories = IGNORE_CATEGORIES.includes(transaction.category);
 
-    await this.monthlySummaryService.updateSummary({
-      date: transaction.date,
-      type: transaction.type as 'income' | 'expense',
-      category: transaction.category,
-      amount: -transaction.amount,
-      payment_method: transaction.method,
-    });
+    if (!skipCategories) {
+      await this.dailySummaryService.updateSummary({
+        date: transaction.date,
+        type: transaction.type as 'income' | 'expense',
+        category: transaction.category,
+        amount: -transaction.amount,
+      });
+
+      await this.monthlySummaryService.updateSummary({
+        date: transaction.date,
+        type: transaction.type as 'income' | 'expense',
+        category: transaction.category,
+        amount: -transaction.amount,
+        payment_method: transaction.method,
+      });
+    }
 
     await this.transactionModel.deleteOne({ _id: id });
   }
