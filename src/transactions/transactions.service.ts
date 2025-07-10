@@ -1,6 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { plainToInstance } from 'class-transformer';
+import { validateSync } from 'class-validator';
 import { Transaction, TransactionDocument } from './transaction.schema';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
@@ -53,6 +55,40 @@ export class TransactionsService {
     });
 
     return transaction;
+  }
+
+  async createMany(dtos: CreateTransactionDto[]): Promise<Transaction[]> {
+    const instances = plainToInstance(CreateTransactionDto, dtos);
+    for (const inst of instances) {
+      const errors = validateSync(inst as object);
+      if (errors.length > 0) {
+        throw new BadRequestException('Validation failed');
+      }
+    }
+    const docs = instances.map((dto) => ({
+      ...dto,
+      date: new Date(dto.date as unknown as string),
+    }));
+    const transactions = await this.transactionModel.insertMany(docs);
+
+    for (const transaction of transactions) {
+      await this.dailySummaryService.updateSummary({
+        date: transaction.date,
+        type: transaction.type as 'income' | 'expense',
+        category: transaction.category,
+        amount: transaction.amount,
+      });
+
+      await this.monthlySummaryService.updateSummary({
+        date: transaction.date,
+        type: transaction.type as 'income' | 'expense',
+        category: transaction.category,
+        amount: transaction.amount,
+        payment_method: transaction.method,
+      });
+    }
+
+    return transactions as Transaction[];
   }
 
   async update(

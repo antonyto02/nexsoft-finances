@@ -8,7 +8,11 @@ export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}
 
   @Post()
-  async create(@Body() dto: CreateTransactionDto) {
+  async create(@Body() dto: CreateTransactionDto | CreateTransactionDto[]) {
+    if (Array.isArray(dto)) {
+      const data = await this.transactionsService.createMany(dto);
+      return data;
+    }
     const data = await this.transactionsService.create(dto);
     return data;
   }
