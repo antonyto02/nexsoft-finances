@@ -8,6 +8,7 @@ import { TransactionsModule } from './transactions/transactions.module';
 import { SummaryTransactionsModule } from './monitoring/summary-transactions/summary-transactions.module';
 import { FinanceModule } from './finance/finance.module';
 import { TransferModule } from './controllers/transfer.module';
+import { ForecastModule } from './forecast/forecast.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { TransferModule } from './controllers/transfer.module';
     SummaryTransactionsModule,
     FinanceModule,
     TransferModule,
+    ForecastModule,
   ],
 })
 export class AppModule {}

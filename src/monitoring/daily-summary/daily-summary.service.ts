@@ -18,6 +18,12 @@ export class DailySummaryService {
   ) {}
 
   async updateSummary(payload: UpdatePayload): Promise<void> {
+    if (
+      payload.category === 'Transferencia' ||
+      payload.category === 'Pago de TDC'
+    ) {
+      return;
+    }
     const dateString = payload.date.toISOString().split('T')[0];
 
     let summary = await this.summaryModel.findOne({
