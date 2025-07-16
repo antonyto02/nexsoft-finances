@@ -28,16 +28,18 @@ export class SummaryTransactionsService {
     private readonly paymentMethodModel: Model<PaymentMethodDocument>,
   ) {}
 
-  async getMonthData(year: number, month: number) {
+  async getMonthData(year: number, month: number, companyId: string) {
     const start = new Date(Date.UTC(year, month - 1, 1));
     const end = new Date(Date.UTC(year, month, 1));
 
     const transactions = await this.transactionModel
-      .find({ date: { $gte: start, $lt: end } })
+      .find({ date: { $gte: start, $lt: end }, company_id: companyId })
       .lean();
 
     const id = `${year}-${String(month).padStart(2, '0')}`;
-    const summary = await this.monthlyModel.findById(id).lean();
+    const summary = await this.monthlyModel
+      .findOne({ _id: id, company_id: companyId })
+      .lean();
 
     const categoriesIncomeDocs = await this.categoryModel
       .find({ type: 'income' })
