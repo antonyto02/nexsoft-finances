@@ -35,16 +35,20 @@ export class CategoriesService {
     private readonly monthlySummaryModel: Model<MonthlySummaryDocument>,
   ) {}
 
-  async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
+  async create(
+    createCategoryDto: CreateCategoryDto,
+    companyId: string,
+  ): Promise<Category> {
     const created = new this.categoryModel({
       ...createCategoryDto,
       is_active: true,
+      company_id: companyId,
     });
     return created.save();
   }
 
-  async findAll(): Promise<Category[]> {
-    return this.categoryModel.find().lean();
+  async findAll(companyId: string): Promise<Category[]> {
+    return this.categoryModel.find({ company_id: companyId }).lean();
   }
 
   async update(oldName: string, dto: UpdateCategoryDto): Promise<void> {

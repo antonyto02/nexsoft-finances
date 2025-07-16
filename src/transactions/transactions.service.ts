@@ -30,10 +30,12 @@ export class TransactionsService {
 
   async create(
     createTransactionDto: CreateTransactionDto,
+    companyId: string,
   ): Promise<Transaction> {
     const created = new this.transactionModel({
       ...createTransactionDto,
       date: new Date(createTransactionDto.date),
+      company_id: companyId,
     });
     const transaction = await created.save();
 

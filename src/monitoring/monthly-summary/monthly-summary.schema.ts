@@ -14,6 +14,9 @@ export class MonthlySummary {
   @Prop({ required: true })
   year: number;
 
+  @Prop({ required: true })
+  company_id: string;
+
   @Prop({ type: Object, required: true, default: {} })
   initial_balance: Record<string, number>;
 

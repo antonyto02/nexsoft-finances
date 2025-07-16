@@ -6,24 +6,31 @@ import {
   Patch,
   Param,
   Delete,
+  Headers,
 } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { extractCompanyId } from '../../utils/token';
 
 @Controller('monitoring/categories')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Get()
-  async findAll() {
-    const data = await this.categoriesService.findAll();
+  async findAll(@Headers('authorization') auth?: string) {
+    const companyId = extractCompanyId(auth);
+    const data = await this.categoriesService.findAll(companyId);
     return { data };
   }
 
   @Post()
-  async create(@Body() createCategoryDto: CreateCategoryDto) {
-    const data = await this.categoriesService.create(createCategoryDto);
+  async create(
+    @Body() createCategoryDto: CreateCategoryDto,
+    @Headers('authorization') auth?: string,
+  ) {
+    const companyId = extractCompanyId(auth);
+    const data = await this.categoriesService.create(createCategoryDto, companyId);
     return {
       data,
       message: 'Category created successfully',

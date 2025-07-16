@@ -14,6 +14,9 @@ export class PaymentMethod {
   @Prop({ required: true })
   color: string;
 
+  @Prop({ required: true })
+  company_id: string;
+
   @Prop({ default: true })
   is_active: boolean;
 }

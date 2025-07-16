@@ -42,15 +42,15 @@ export class SummaryTransactionsService {
       .lean();
 
     const categoriesIncomeDocs = await this.categoryModel
-      .find({ type: 'income' })
+      .find({ type: 'income', company_id: companyId })
       .select('name -_id')
       .lean();
     const categoriesExpenseDocs = await this.categoryModel
-      .find({ type: 'expense' })
+      .find({ type: 'expense', company_id: companyId })
       .select('name -_id')
       .lean();
     const paymentMethodsDocs = await this.paymentMethodModel
-      .find()
+      .find({ company_id: companyId })
       .select('name -_id')
       .lean();
 

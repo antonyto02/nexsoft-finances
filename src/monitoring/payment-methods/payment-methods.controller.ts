@@ -6,24 +6,31 @@ import {
   Patch,
   Param,
   Delete,
+  Headers,
 } from '@nestjs/common';
 import { PaymentMethodsService } from './payment-methods.service';
 import { CreatePaymentMethodDto } from './dto/create-payment-method.dto';
 import { UpdatePaymentMethodDto } from './dto/update-payment-method.dto';
+import { extractCompanyId } from '../../utils/token';
 
 @Controller('monitoring/payment-methods')
 export class PaymentMethodsController {
   constructor(private readonly paymentMethodsService: PaymentMethodsService) {}
 
   @Get()
-  async findAll() {
-    const data = await this.paymentMethodsService.findAll();
+  async findAll(@Headers('authorization') auth?: string) {
+    const companyId = extractCompanyId(auth);
+    const data = await this.paymentMethodsService.findAll(companyId);
     return { data };
   }
 
   @Post()
-  async create(@Body() dto: CreatePaymentMethodDto) {
-    const data = await this.paymentMethodsService.create(dto);
+  async create(
+    @Body() dto: CreatePaymentMethodDto,
+    @Headers('authorization') auth?: string,
+  ) {
+    const companyId = extractCompanyId(auth);
+    const data = await this.paymentMethodsService.create(dto, companyId);
     return {
       message: 'Payment method created successfully',
       data,
