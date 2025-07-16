@@ -12,6 +12,7 @@ interface UpdatePayload {
   category: string;
   amount: number;
   payment_method: string;
+  company_id: string;
 }
 
 @Injectable()
@@ -24,6 +25,7 @@ export class MonthlySummaryService {
   private async createNewSummary(
     year: number,
     month: number,
+    companyId: string,
   ): Promise<MonthlySummaryDocument> {
     const id = `${year}-${String(month).padStart(2, '0')}`;
 
@@ -40,6 +42,7 @@ export class MonthlySummaryService {
       _id: id,
       month,
       year,
+      company_id: companyId,
       initial_balance,
       totals: {
         total_income: 0,
@@ -67,9 +70,12 @@ export class MonthlySummaryService {
     const month = payload.date.getUTCMonth() + 1;
     const id = `${year}-${String(month).padStart(2, '0')}`;
 
-    let summary = await this.summaryModel.findById(id);
+    let summary = await this.summaryModel.findOne({
+      _id: id,
+      company_id: payload.company_id,
+    });
     if (!summary) {
-      summary = await this.createNewSummary(year, month);
+      summary = await this.createNewSummary(year, month, payload.company_id);
     }
 
     if (!summary) {
@@ -112,7 +118,10 @@ export class MonthlySummaryService {
 
     while (true) {
       const nextId = `${nextYear}-${String(nextMonth).padStart(2, '0')}`;
-      const nextSummary = await this.summaryModel.findById(nextId);
+      const nextSummary = await this.summaryModel.findOne({
+        _id: nextId,
+        company_id: payload.company_id,
+      });
       if (!nextSummary) {
         break;
       }
@@ -137,14 +146,18 @@ export class MonthlySummaryService {
     from: string;
     to: string;
     amount: number;
+    company_id: string;
   }): Promise<string[]> {
     const year = payload.date.getUTCFullYear();
     const month = payload.date.getUTCMonth() + 1;
     const id = `${year}-${String(month).padStart(2, '0')}`;
 
-    let summary = await this.summaryModel.findById(id);
+    let summary = await this.summaryModel.findOne({
+      _id: id,
+      company_id: payload.company_id,
+    });
     if (!summary) {
-      summary = await this.createNewSummary(year, month);
+      summary = await this.createNewSummary(year, month, payload.company_id);
     }
 
     if (!(payload.from in summary.final_balance)) {
@@ -165,7 +178,10 @@ export class MonthlySummaryService {
 
     while (true) {
       const nextId = `${nextYear}-${String(nextMonth).padStart(2, '0')}`;
-      const nextSummary = await this.summaryModel.findById(nextId);
+      const nextSummary = await this.summaryModel.findOne({
+        _id: nextId,
+        company_id: payload.company_id,
+      });
       if (!nextSummary) {
         break;
       }
@@ -189,17 +205,26 @@ export class MonthlySummaryService {
     return updated;
   }
 
-  async getSummariesByYear(year: number): Promise<MonthlySummary[]> {
-    return this.summaryModel.find({ year }).sort({ month: 1 }).lean();
+  async getSummariesByYear(
+    year: number,
+    companyId: string,
+  ): Promise<MonthlySummary[]> {
+    return this.summaryModel
+      .find({ year, company_id: companyId })
+      .sort({ month: 1 })
+      .lean();
   }
 
-  async getSummariesByIds(ids: string[]): Promise<MonthlySummary[]> {
+  async getSummariesByIds(
+    ids: string[],
+    companyId: string,
+  ): Promise<MonthlySummary[]> {
     if (ids.length === 0) {
       return [];
     }
 
     return this.summaryModel
-      .find({ _id: { $in: ids } })
+      .find({ _id: { $in: ids }, company_id: companyId })
       .sort({ year: 1, month: 1 })
       .lean();
   }

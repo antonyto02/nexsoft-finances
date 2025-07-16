@@ -1,6 +1,13 @@
-import { Controller, Get, Query, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  BadRequestException,
+  Headers,
+} from '@nestjs/common';
 import { DailySummaryService } from '../monitoring/daily-summary/daily-summary.service';
 import { MonthlySummaryService } from '../monitoring/monthly-summary/monthly-summary.service';
+import { extractCompanyId } from '../utils/token';
 
 @Controller('finances')
 export class FinanceController {
@@ -16,7 +23,9 @@ export class FinanceController {
     @Query('year') year?: string,
     @Query('month') month?: string,
     @Query('day') day?: string,
+    @Headers('authorization') auth?: string,
   ) {
+    const companyId = extractCompanyId(auth);
     if (range === 'today') {
       if (view !== 'daily') {
         throw new BadRequestException('Invalid range or view');
@@ -26,7 +35,10 @@ export class FinanceController {
       const utcDate = new Date(
         Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
       );
-      const summary = await this.dailySummaryService.getSummaryByDate(utcDate);
+      const summary = await this.dailySummaryService.getSummaryByDate(
+        utcDate,
+        companyId,
+      );
 
       if (!summary) {
         return {
@@ -95,6 +107,7 @@ export class FinanceController {
       const summaries = await this.dailySummaryService.getSummariesByRange(
         start,
         end,
+        companyId,
       );
 
       const totals = { income: 0, expense: 0, net_profit: 0, profit_margin: 0 };
@@ -178,6 +191,7 @@ export class FinanceController {
       const summaries = await this.dailySummaryService.getSummariesByRange(
         start,
         end,
+        companyId,
       );
 
       const weekMap: Record<
@@ -305,7 +319,10 @@ export class FinanceController {
         }
       }
 
-      const summaries = await this.monthlySummaryService.getSummariesByIds(ids);
+      const summaries = await this.monthlySummaryService.getSummariesByIds(
+        ids,
+        companyId,
+      );
       const summaryMap: Record<string, (typeof summaries)[number]> = {};
       for (const s of summaries) {
         const id = `${s.year}-${String(s.month).padStart(2, '0')}`;
@@ -407,7 +424,10 @@ export class FinanceController {
     if (monthNum) {
       if (dayNum) {
         const date = new Date(Date.UTC(yearNum, monthNum - 1, dayNum));
-        const summary = await this.dailySummaryService.getSummaryByDate(date);
+        const summary = await this.dailySummaryService.getSummaryByDate(
+          date,
+          companyId,
+        );
 
         if (!summary) {
           return {
@@ -455,6 +475,7 @@ export class FinanceController {
       const summaries = await this.dailySummaryService.getSummariesByMonth(
         yearNum,
         monthNum,
+        companyId,
       );
 
       const totals = { income: 0, expense: 0, net_profit: 0, profit_margin: 0 };
@@ -516,7 +537,7 @@ export class FinanceController {
     }
 
     const summaries =
-      await this.monthlySummaryService.getSummariesByYear(yearNum);
+      await this.monthlySummaryService.getSummariesByYear(yearNum, companyId);
 
     const totals = { income: 0, expense: 0, net_profit: 0, profit_margin: 0 };
     const incomeMap: Record<string, number> = {};

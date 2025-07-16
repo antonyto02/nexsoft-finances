@@ -31,16 +31,22 @@ export class PaymentMethodsService {
 
   async create(
     createPaymentMethodDto: CreatePaymentMethodDto,
+    companyId: string,
   ): Promise<PaymentMethod> {
     const created = new this.paymentMethodModel({
       ...createPaymentMethodDto,
       is_active: true,
+      company_id: companyId,
     });
     return created.save();
   }
 
-  async findAll(): Promise<PaymentMethod[]> {
-    return this.paymentMethodModel.find().lean();
+  async findAll(companyId: string): Promise<PaymentMethod[]> {
+    return this.paymentMethodModel
+      .find({
+        $or: [{ company_id: companyId }, { type: 'cash' }],
+      })
+      .lean();
   }
 
   async update(oldName: string, dto: UpdatePaymentMethodDto): Promise<void> {

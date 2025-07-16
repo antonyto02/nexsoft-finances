@@ -6,6 +6,8 @@ export type DailySummaryDocument = HydratedDocument<DailySummary>;
 @Schema({ collection: 'daily_summary' })
 export class DailySummary {
   @Prop({ required: true })
+  company_id: string;
+  @Prop({ required: true })
   date: Date;
 
   @Prop({ required: true, default: 0 })

@@ -30,10 +30,12 @@ export class TransactionsService {
 
   async create(
     createTransactionDto: CreateTransactionDto,
+    companyId: string,
   ): Promise<Transaction> {
     const created = new this.transactionModel({
       ...createTransactionDto,
       date: new Date(createTransactionDto.date),
+      company_id: companyId,
     });
     const transaction = await created.save();
 
@@ -42,6 +44,7 @@ export class TransactionsService {
       type: transaction.type as 'income' | 'expense',
       category: transaction.category,
       amount: transaction.amount,
+      company_id: companyId,
     });
 
     await this.monthlySummaryService.updateSummary({
@@ -50,6 +53,7 @@ export class TransactionsService {
       category: transaction.category,
       amount: transaction.amount,
       payment_method: transaction.method,
+      company_id: companyId,
     });
 
     return transaction;
@@ -75,6 +79,7 @@ export class TransactionsService {
           from: original.method,
           to: dest,
           amount: -original.amount,
+          company_id: original.company_id,
         });
       }
     } else {
@@ -83,6 +88,7 @@ export class TransactionsService {
         type: original.type as 'income' | 'expense',
         category: original.category,
         amount: -original.amount,
+        company_id: original.company_id,
       });
 
       await this.monthlySummaryService.updateSummary({
@@ -91,6 +97,7 @@ export class TransactionsService {
         category: original.category,
         amount: -original.amount,
         payment_method: original.method,
+        company_id: original.company_id,
       });
     }
 
@@ -99,6 +106,7 @@ export class TransactionsService {
     const created = new this.transactionModel({
       ...updateTransactionDto,
       date: new Date(updateTransactionDto.date),
+      company_id: original.company_id,
     });
     const transaction = await created.save();
 
@@ -114,6 +122,7 @@ export class TransactionsService {
           from: transaction.method,
           to: dest,
           amount: transaction.amount,
+          company_id: transaction.company_id,
         });
       }
     } else {
@@ -122,6 +131,7 @@ export class TransactionsService {
         type: transaction.type as 'income' | 'expense',
         category: transaction.category,
         amount: transaction.amount,
+        company_id: transaction.company_id,
       });
 
       await this.monthlySummaryService.updateSummary({
@@ -130,6 +140,7 @@ export class TransactionsService {
         category: transaction.category,
         amount: transaction.amount,
         payment_method: transaction.method,
+        company_id: transaction.company_id,
       });
     }
 
@@ -154,6 +165,7 @@ export class TransactionsService {
           from: transaction.method,
           to: dest,
           amount: -transaction.amount,
+          company_id: transaction.company_id,
         });
       }
     } else {
@@ -162,6 +174,7 @@ export class TransactionsService {
         type: transaction.type as 'income' | 'expense',
         category: transaction.category,
         amount: -transaction.amount,
+        company_id: transaction.company_id,
       });
 
       await this.monthlySummaryService.updateSummary({
@@ -170,6 +183,7 @@ export class TransactionsService {
         category: transaction.category,
         amount: -transaction.amount,
         payment_method: transaction.method,
+        company_id: transaction.company_id,
       });
     }
 
