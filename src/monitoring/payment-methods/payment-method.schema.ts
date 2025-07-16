@@ -8,7 +8,7 @@ export class PaymentMethod {
   @Prop({ required: true })
   name: string;
 
-  @Prop({ required: true, enum: ['credit', 'debit'] })
+  @Prop({ required: true, enum: ['cash', 'credit', 'debit'] })
   type: string;
 
   @Prop({ required: true })

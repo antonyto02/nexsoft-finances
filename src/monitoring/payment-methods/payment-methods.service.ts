@@ -43,7 +43,9 @@ export class PaymentMethodsService {
 
   async findAll(companyId: string): Promise<PaymentMethod[]> {
     return this.paymentMethodModel
-      .find({ company_id: companyId, type: 'cash' })
+      .find({
+        $or: [{ company_id: companyId }, { type: 'cash' }],
+      })
       .lean();
   }
 
