@@ -8,6 +8,7 @@ interface UpdatePayload {
   type: 'income' | 'expense';
   category: string;
   amount: number;
+  company_id: string;
 }
 
 @Injectable()
@@ -28,9 +29,13 @@ export class DailySummaryService {
 
     let summary = await this.summaryModel.findOne({
       date: new Date(dateString),
+      company_id: payload.company_id,
     });
     if (!summary) {
-      summary = new this.summaryModel({ date: new Date(dateString) });
+      summary = new this.summaryModel({
+        date: new Date(dateString),
+        company_id: payload.company_id,
+      });
     }
 
     if (payload.type === 'income') {
@@ -49,24 +54,30 @@ export class DailySummaryService {
     await summary.save();
   }
 
-  async getNetProfitByDate(date: Date): Promise<number> {
+  async getNetProfitByDate(date: Date, companyId: string): Promise<number> {
     const dateString = date.toISOString().split('T')[0];
     const summary = await this.summaryModel
-      .findOne({ date: new Date(dateString) })
+      .findOne({ date: new Date(dateString), company_id: companyId })
       .select('net_profit')
       .lean();
 
     return summary ? summary.net_profit : 0;
   }
 
-  async getSummaryByDate(date: Date): Promise<DailySummary | null> {
+  async getSummaryByDate(
+    date: Date,
+    companyId: string,
+  ): Promise<DailySummary | null> {
     const dateString = date.toISOString().split('T')[0];
-    return this.summaryModel.findOne({ date: new Date(dateString) }).lean();
+    return this.summaryModel
+      .findOne({ date: new Date(dateString), company_id: companyId })
+      .lean();
   }
 
   async getSummariesByMonth(
     year: number,
     month: number,
+    companyId: string,
   ): Promise<DailySummary[]> {
     const start = new Date(Date.UTC(year, month - 1, 1));
     const end = new Date(
@@ -74,7 +85,7 @@ export class DailySummaryService {
     );
 
     return this.summaryModel
-      .find({ date: { $gte: start, $lt: end } })
+      .find({ date: { $gte: start, $lt: end }, company_id: companyId })
       .sort({ date: 1 })
       .lean();
   }
@@ -82,9 +93,10 @@ export class DailySummaryService {
   async getSummariesByRange(
     start: Date,
     end: Date,
+    companyId: string,
   ): Promise<DailySummary[]> {
     return this.summaryModel
-      .find({ date: { $gte: start, $lt: end } })
+      .find({ date: { $gte: start, $lt: end }, company_id: companyId })
       .sort({ date: 1 })
       .lean();
   }
