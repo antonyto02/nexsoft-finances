@@ -42,7 +42,9 @@ export class PaymentMethodsService {
   }
 
   async findAll(companyId: string): Promise<PaymentMethod[]> {
-    return this.paymentMethodModel.find({ company_id: companyId }).lean();
+    return this.paymentMethodModel
+      .find({ company_id: companyId, type: 'cash' })
+      .lean();
   }
 
   async update(oldName: string, dto: UpdatePaymentMethodDto): Promise<void> {
