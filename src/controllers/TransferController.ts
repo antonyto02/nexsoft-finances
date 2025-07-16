@@ -1,10 +1,17 @@
-import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Post,
+  Headers,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MonthlySummaryService } from '../monitoring/monthly-summary/monthly-summary.service';
 import { Transaction, TransactionDocument } from '../transactions/transaction.schema';
 import { PaymentMethod, PaymentMethodDocument } from '../monitoring/payment-methods/payment-method.schema';
 import { CreateTransferDto } from './dto/create-transfer.dto';
+import { extractCompanyId } from '../utils/token';
 
 @Controller('finances/transfers')
 export class TransferController {
@@ -17,7 +24,11 @@ export class TransferController {
   ) {}
 
   @Post()
-  async create(@Body() dto: CreateTransferDto) {
+  async create(
+    @Body() dto: CreateTransferDto,
+    @Headers('authorization') auth?: string,
+  ) {
+    const companyId = extractCompanyId(auth);
     if (dto.type !== 'transfer' && dto.type !== 'pay') {
       throw new BadRequestException('Invalid type');
     }
@@ -52,6 +63,7 @@ export class TransferController {
       amount: dto.amount,
       method: dto.from,
       concept,
+      company_id: companyId,
     });
     const saved = await transaction.save();
 
@@ -60,6 +72,7 @@ export class TransferController {
       from: dto.from,
       to: dto.to,
       amount: dto.amount,
+      company_id: companyId,
     });
 
     return {
