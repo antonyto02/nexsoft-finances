@@ -22,6 +22,9 @@ export class Transaction {
 
   @Prop({ required: true })
   concept: string;
+
+  @Prop({ required: true })
+  company_id: string;
 }
 
 export const TransactionSchema = SchemaFactory.createForClass(Transaction);

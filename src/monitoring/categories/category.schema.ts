@@ -11,6 +11,9 @@ export class Category {
   @Prop({ required: true })
   type: string;
 
+  @Prop({ required: true })
+  company_id: string;
+
   @Prop({ default: true })
   is_active: boolean;
 }
